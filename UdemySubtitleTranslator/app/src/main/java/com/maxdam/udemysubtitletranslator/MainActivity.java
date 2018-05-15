@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -52,7 +54,8 @@ import fr.noop.subtitle.vtt.VttWriter;
 public class MainActivity extends AppCompatActivity {
 
     private Button translateBtn;
-    private TextView log;
+    private Button settingsBtn;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +63,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
+        //ottiene le preferenze
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        //bottoni
         translateBtn = (Button) findViewById(R.id.translate);
-        log = (TextView) findViewById(R.id.log);
+        settingsBtn = (Button) findViewById(R.id.settings);
 
         translateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
                 finally {
                     translateBtn.setEnabled(true);
                 }
+            }
+        });
+
+        settingsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //chiama l'activity di setting
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
             }
         });
     }

@@ -35,6 +35,13 @@ import fr.noop.subtitle.vtt.VttWriter;
 
 public class ServiceTranslate extends IntentService {
 
+    private static final String SUBTITLE_PATH = "/storage/emulated/0/Android/data/com.udemy.android/files/udemy-subtitle-downloads";
+    private static final String FILE_SRT_ENGLISH_NAME = "en_US.srt";
+    private static final String FILE_SRT_ENGLISH_BACKUP_NAME = "en_US.srt.old";
+    private static final String FILE_SRT_ITALIAN_NAME = "it_IT.srt";
+    private static final String INPUT_LANGUAGE = "en";
+    private static final String OUTPUT_LANGUAGE = "it";
+
     private String TAG = ServiceTranslate.class.getName();
 
     public static final String LOG_TRANSLATE = "broadcast.LOG_TRANSLATE";
@@ -61,7 +68,7 @@ public class ServiceTranslate extends IntentService {
             //imposta ad on il semaforo
             inProgress.set(true);
 
-            File mainDir = new File(SUBTITLE_PATH);
+            File mainDir = new File(prefs.getString("subtitle_path", SUBTITLE_PATH));
             logInfo("main dir: " + mainDir.getPath() + "\n\n");
             exploreDirFiles(mainDir);
         }
@@ -115,13 +122,6 @@ public class ServiceTranslate extends IntentService {
         //Log.e(LogcatViewerActivity.LOG_TAG, message);
     }
 
-    private static final String SUBTITLE_PATH = "/storage/emulated/0/Android/data/com.udemy.android/files/udemy-subtitle-downloads";
-    private static final String FILE_SRT_ENGLISH_NAME = "en_US.srt";
-    private static final String FILE_SRT_ENGLISH_BACKUP_NAME = "en_US.srt.old";
-    private static final String FILE_SRT_ITALIAN_NAME = "it_IT.srt";
-    private static final String INPUT_LANGUAGE = "en";
-    private static final String OUTPUT_LANGUAGE = "it";
-
     //scansiona la directory dei sottotitoli
     public void exploreDirFiles(File dir) {
         if (dir.exists()) {
@@ -132,7 +132,13 @@ public class ServiceTranslate extends IntentService {
                     exploreDirFiles(file);
                 } else {
                     if(file.getName().equals(FILE_SRT_ENGLISH_NAME)) {
-                        if(!new File(file.getPath().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)).exists()) {
+
+                        //ottiene il file di backup ed il file in italiano
+                        File fileEnglishBackup = new File(file.getPath().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME));
+                        File fileItalian = new File(file.getPath().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ITALIAN_NAME));
+
+                        //per elaborare il file non devono esistere sia il file di backup che il file in italiano
+                        if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
                             boolean result = translateWebvtt(file);
                             if(!result) translateSrt(file);
                         }
@@ -173,12 +179,13 @@ public class ServiceTranslate extends IntentService {
                 vttObjOutput.addCue(subtitleCueOutput);
             }
             fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
-            File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
-            //File fileOutput = new File(fileInput.getPath(), fileInput.getName());
-            //fileOutput.deleteOnExit();
+            File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
+            File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
+            //fileOutputEnglish.deleteOnExit();
             VttWriter writer = new VttWriter("utf-8");
-            writer.write(vttObjOutput, new FileOutputStream(fileOutput));
-            logWarning("write file: " + fileOutput.getCanonicalPath() + "\n\n");
+            writer.write(vttObjOutput, new FileOutputStream(fileOutputItalian));
+            writer.write(vttObjOutput, new FileOutputStream(fileOutputEnglish));
+            logWarning("write file: " + fileOutputEnglish.getCanonicalPath() + "\n\n");
             return true;
         }
         catch(Exception e) {
@@ -211,11 +218,12 @@ public class ServiceTranslate extends IntentService {
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
             fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
-            File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
-            //File fileOutput = new File(fileInput.getPath(), fileInput.getName());
+            File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
+            File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
             //fileOutput.deleteOnExit();
-            SRTWriter.write(fileOutput, infoOutput);
-            logWarning("write file: " + fileOutput.getCanonicalPath() + "\n\n");
+            SRTWriter.write(fileOutputItalian, infoOutput);
+            SRTWriter.write(fileOutputEnglish, infoOutput);
+            logWarning("write file: " + fileOutputEnglish.getCanonicalPath() + "\n\n");
             return true;
         }
         catch(Exception e) {

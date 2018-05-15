@@ -40,10 +40,11 @@ public class LogcatViewerActivity extends ListActivity {
 
 		setListAdapter(adaptor);
 
+		//task lettore logcat
 		//logReaderTask = new LogReaderTask();
 		//logReaderTask.execute();
 
-        //receiver di log
+        //receiver di messaggi log
         IntentFilter filterPredict = new IntentFilter();
         filterPredict.addAction(ServiceTranslate.LOG_TRANSLATE);
         registerReceiver(receiverLog, filterPredict);
@@ -53,7 +54,7 @@ public class LogcatViewerActivity extends ListActivity {
 		startService(translateServiceIntent);
 	}
 
-    //evento di log
+    //evento di messaggio log
     private BroadcastReceiver receiverLog = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -163,7 +164,7 @@ public class LogcatViewerActivity extends ListActivity {
 
 			String data = objects.get(position);
 
-			if (null != data) {// && data.length() > 31 && data.contains(LogcatViewerActivity.LOG_TAG)) {
+			if (null != data) {
 
                 TextView textview = (TextView) view.findViewById(R.id.txtLogString);
 				//String type = data.substring(31, 32);
@@ -187,8 +188,7 @@ public class LogcatViewerActivity extends ListActivity {
 
 	private class LogReaderTask extends AsyncTask<Void, String, Void> {
 		
-		//private final String[] LOGCAT_CMD = new String[] { "logcat", "--regex=TRANSLATE_LOG" };
-		private final String LOGCAT_CMD = "logcat";
+		private final String[] LOGCAT_CMD = new String[] { "logcat" };
 
 		private final int BUFFER_SIZE = 1024;
 
@@ -203,15 +203,15 @@ public class LogcatViewerActivity extends ListActivity {
 			try {
 				logprocess = Runtime.getRuntime().exec(LOGCAT_CMD);
 			} catch (IOException e) {
-				//e.printStackTrace();
+				e.printStackTrace();
 
 				isRunning = false;
 			}
 
 			try {
-				reader = new BufferedReader(new InputStreamReader(logprocess.getInputStream())); //, BUFFER_SIZE
+				reader = new BufferedReader(new InputStreamReader(logprocess.getInputStream()), BUFFER_SIZE);
 			} catch (IllegalArgumentException e) {
-				//e.printStackTrace();
+				e.printStackTrace();
 
 				isRunning = false;
 			}
@@ -222,13 +222,10 @@ public class LogcatViewerActivity extends ListActivity {
 				while (isRunning) {
 					line[0] = reader.readLine();
 
-                    //if(!line[0].contains(LogcatViewerActivity.LOG_TAG)) continue;
-                    //if(line[0].length() < 31) continue;
-
                     publishProgress(line);
 				}
 			} catch (Throwable e) {
-				//e.printStackTrace();
+				e.printStackTrace();
 
 				isRunning = false;
 			}
