@@ -15,7 +15,7 @@
 
         <ImageView
             android:layout_width="300dip"
-            android:layout_height="200dip"
+            android:layout_height="230dip"
             android:layout_marginTop="50dp"
             android:src="@drawable/logo"
             android:scaleType="fitXY"/>

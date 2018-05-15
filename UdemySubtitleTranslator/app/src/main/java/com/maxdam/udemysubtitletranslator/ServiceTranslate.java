@@ -17,7 +17,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -139,6 +141,7 @@ public class ServiceTranslate extends IntentService {
 
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
                         if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
+                        //if(!fileEnglishBackup.exists()) {
                             boolean result = translateWebvtt(file);
                             if(!result) translateSrt(file);
                         }
@@ -151,7 +154,7 @@ public class ServiceTranslate extends IntentService {
     //translate webvtt file
     private boolean translateWebvtt(File fileInput) {
         try {
-            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName() + "\n");
+            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
             VttObject vttObjOutput = new VttObject();
             VttParser parser = new VttParser("utf-8");
             VttObject subtitleInput = parser.parse(new FileInputStream(fileInput), false, false);
@@ -160,13 +163,13 @@ public class ServiceTranslate extends IntentService {
                 //effettua la traduzione
                 String translatedText = subtitleCueInput.getText();
                 try {
-                    logInfo("input: " + subtitleCueInput.getText() + "\n");
+                    logInfo("input: " + subtitleCueInput.getText());
                     translatedText = translateFromGoogle(INPUT_LANGUAGE, OUTPUT_LANGUAGE, subtitleCueInput.getText());
-                    logInfo("output: " + translatedText + "\n");
+                    logInfo("output: " + translatedText);
                 }
                 catch (Exception e) {
                     //e.printStackTrace();
-                    logError("error translate: " + e.getMessage() + "\n");
+                    logError("error translate: " + e.getMessage());
                 }
 
                 //scrive il Cue di output e lo accoda all'oggetto di output
@@ -178,10 +181,18 @@ public class ServiceTranslate extends IntentService {
                 subtitleCueOutput.addLine(subtitleTextLineOutput);
                 vttObjOutput.addCue(subtitleCueOutput);
             }
-            fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
+
+            //effettua una copia di backup del file originale
+            File fileInputBackup = new File(fileInput.getParent(), FILE_SRT_ENGLISH_BACKUP_NAME);
+            copyFile(fileInput, fileInputBackup);
+
+            //crea i file di output
             File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
+            //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
             //fileOutputEnglish.deleteOnExit();
+
+            //scrive i file in uscita
             VttWriter writer = new VttWriter("utf-8");
             writer.write(vttObjOutput, new FileOutputStream(fileOutputItalian));
             writer.write(vttObjOutput, new FileOutputStream(fileOutputEnglish));
@@ -198,29 +209,36 @@ public class ServiceTranslate extends IntentService {
     //translate srt file
     private boolean translateSrt(File fileInput) {
         try {
-            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName() + "\n");
+            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
             SRTInfo infoOutput = new SRTInfo();
             SRTInfo infoInput = SRTReader.read(fileInput);
             for (SRT s : infoInput) {
                 StringBuffer outputText = new StringBuffer();
                 for (String lineInput : s.text) {
-                    logInfo("input: " + lineInput + "\n");
+                    logInfo("input: " + lineInput);
                     try {
                         String lineOutput = translateFromGoogle(INPUT_LANGUAGE, OUTPUT_LANGUAGE, lineInput);
                         outputText.append(lineOutput);
-                        logInfo("output: " + lineOutput + "\n");
+                        logInfo("output: " + lineOutput);
                     }
                     catch (Exception e) {
                         //e.printStackTrace();
-                        logError("error translate: " + e.getMessage() + "\n");
+                        logError("error translate: " + e.getMessage());
                     }
                 }
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
-            fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
+            //effettua una copia di backup del file originale
+            File fileInputBackup = new File(fileInput.getParent(), FILE_SRT_ENGLISH_BACKUP_NAME);
+            copyFile(fileInput, fileInputBackup);
+
+            //crea i file di output
             File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
-            //fileOutput.deleteOnExit();
+            //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
+            //fileOutputEnglish.deleteOnExit();
+
+            //scrive i file in uscita
             SRTWriter.write(fileOutputItalian, infoOutput);
             SRTWriter.write(fileOutputEnglish, infoOutput);
             logWarning("write file: " + fileOutputEnglish.getCanonicalPath() + "\n\n");
@@ -248,7 +266,6 @@ public class ServiceTranslate extends IntentService {
         in.close();
         String responseFlat = StringEscapeUtils.unescapeHtml4(response.toString());
         String expression = "class=\"t0\">(.*?)<";
-        //String expression = "<div dir=\"ltr\" class=\"t0\">(.*?)</div>";
         String result = text;
         Matcher m =  Pattern.compile(expression).matcher(responseFlat);
         if (m.find()) {
@@ -256,4 +273,25 @@ public class ServiceTranslate extends IntentService {
         }
         return result;
     }
+
+    //copia un file
+    public static void copyFile(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+
 }
