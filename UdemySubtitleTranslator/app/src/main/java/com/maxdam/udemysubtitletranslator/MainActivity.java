@@ -78,36 +78,5 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        //receiver di log
-        IntentFilter filterPredict = new IntentFilter();
-        filterPredict.addAction(ServiceTranslate.LOG_TRANSLATE);
-        registerReceiver(receiverLog, filterPredict);
-    }
-
-    //evento di log
-    private BroadcastReceiver receiverLog = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            log.append(intent.getStringExtra("message"));
-        }
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        //register receiver di log
-        IntentFilter filterTraining = new IntentFilter();
-        filterTraining.addAction(ServiceTranslate.LOG_TRANSLATE);
-        registerReceiver(receiverLog, filterTraining);
-    }
-
-    @Override
-    protected void onPause() {
-        //unregister dei receivers
-        unregisterReceiver(receiverLog);
-
-        super.onPause();
     }
 }

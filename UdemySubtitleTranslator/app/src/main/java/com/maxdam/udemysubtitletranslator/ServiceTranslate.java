@@ -73,42 +73,46 @@ public class ServiceTranslate extends IntentService {
 
     private void logInfo(String message) {
         //invia il broadcast per notificare il logInfo
-        /*Intent broadcastIntent = new Intent();
+        String logType = "I";
+        Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(LOG_TRANSLATE);
-        broadcastIntent.putExtra("message", message);
-        this.sendBroadcast(broadcastIntent);*/
+        broadcastIntent.putExtra("message", logType + message);
+        this.sendBroadcast(broadcastIntent);
 
-        Log.i(LogcatViewerActivity.LOG_TAG, message);
+        //Log.i(LogcatViewerActivity.LOG_TAG, message);
     }
 
     private void logDebug(String message) {
         //invia il broadcast per notificare il logInfo
-        /*Intent broadcastIntent = new Intent();
+        String logType = "D";
+        Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(LOG_TRANSLATE);
-        broadcastIntent.putExtra("message", message);
-        this.sendBroadcast(broadcastIntent);*/
+        broadcastIntent.putExtra("message", logType + message);
+        this.sendBroadcast(broadcastIntent);
 
-        Log.d(LogcatViewerActivity.LOG_TAG, message);
+        //Log.d(LogcatViewerActivity.LOG_TAG, message);
     }
 
     private void logWarning(String message) {
         //invia il broadcast per notificare il logInfo
-        /*Intent broadcastIntent = new Intent();
+        String logType = "W";
+        Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(LOG_TRANSLATE);
-        broadcastIntent.putExtra("message", message);
-        this.sendBroadcast(broadcastIntent);*/
+        broadcastIntent.putExtra("message", logType + message);
+        this.sendBroadcast(broadcastIntent);
 
-        Log.w(LogcatViewerActivity.LOG_TAG, message);
+        //Log.w(LogcatViewerActivity.LOG_TAG, message);
     }
 
     private void logError(String message) {
         //invia il broadcast per notificare il logInfo
-        /*Intent broadcastIntent = new Intent();
+        String logType = "E";
+        Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(LOG_TRANSLATE);
-        broadcastIntent.putExtra("message", message);
-        this.sendBroadcast(broadcastIntent);*/
+        broadcastIntent.putExtra("message", logType + message);
+        this.sendBroadcast(broadcastIntent);
 
-        Log.e(LogcatViewerActivity.LOG_TAG, message);
+        //Log.e(LogcatViewerActivity.LOG_TAG, message);
     }
 
     private static final String SUBTITLE_PATH = "/storage/emulated/0/Android/data/com.udemy.android/files/udemy-subtitle-downloads";
@@ -155,7 +159,7 @@ public class ServiceTranslate extends IntentService {
                     logInfo("output: " + translatedText + "\n");
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     logError("error translate: " + e.getMessage() + "\n");
                 }
 
@@ -169,8 +173,8 @@ public class ServiceTranslate extends IntentService {
                 vttObjOutput.addCue(subtitleCueOutput);
             }
             fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
-            //File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
-            File fileOutput = new File(fileInput.getPath(), fileInput.getName());
+            File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
+            //File fileOutput = new File(fileInput.getPath(), fileInput.getName());
             //fileOutput.deleteOnExit();
             VttWriter writer = new VttWriter("utf-8");
             writer.write(vttObjOutput, new FileOutputStream(fileOutput));
@@ -178,7 +182,7 @@ public class ServiceTranslate extends IntentService {
             return true;
         }
         catch(Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             logError("error: " + e.getMessage() + "\n\n");
             return false;
         }
@@ -200,22 +204,22 @@ public class ServiceTranslate extends IntentService {
                         logInfo("output: " + lineOutput + "\n");
                     }
                     catch (Exception e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                         logError("error translate: " + e.getMessage() + "\n");
                     }
                 }
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
             fileInput.renameTo(new File(fileInput.getName().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME)));
-            //File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
-            File fileOutput = new File(fileInput.getPath(), fileInput.getName());
+            File fileOutput = new File(fileInput.getPath(), FILE_SRT_ITALIAN_NAME);
+            //File fileOutput = new File(fileInput.getPath(), fileInput.getName());
             //fileOutput.deleteOnExit();
             SRTWriter.write(fileOutput, infoOutput);
             logWarning("write file: " + fileOutput.getCanonicalPath() + "\n\n");
             return true;
         }
         catch(Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             logError("error: " + e.getMessage() + "\n\n");
             return false;
         }

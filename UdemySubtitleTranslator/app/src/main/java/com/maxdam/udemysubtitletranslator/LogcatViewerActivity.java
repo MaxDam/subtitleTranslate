@@ -8,8 +8,10 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -38,16 +40,28 @@ public class LogcatViewerActivity extends ListActivity {
 
 		setListAdapter(adaptor);
 
-		logReaderTask = new LogReaderTask();
+		//logReaderTask = new LogReaderTask();
+		//logReaderTask.execute();
 
-		logReaderTask.execute();
+        //receiver di log
+        IntentFilter filterPredict = new IntentFilter();
+        filterPredict.addAction(ServiceTranslate.LOG_TRANSLATE);
+        registerReceiver(receiverLog, filterPredict);
 
 		//richiama il servizio di translate
 		Intent translateServiceIntent = new Intent(LogcatViewerActivity.this, ServiceTranslate.class);
 		startService(translateServiceIntent);
 	}
 
-	@Override
+    //evento di log
+    private BroadcastReceiver receiverLog = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            adaptor.add(intent.getStringExtra("message"));
+        }
+    };
+
+    @Override
 	protected void onDestroy() {
 		
 		logReaderTask.stopTask();
@@ -55,6 +69,23 @@ public class LogcatViewerActivity extends ListActivity {
 		super.onDestroy();
 	}
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //register receiver di log
+        IntentFilter filterTraining = new IntentFilter();
+        filterTraining.addAction(ServiceTranslate.LOG_TRANSLATE);
+        registerReceiver(receiverLog, filterTraining);
+    }
+
+    @Override
+    protected void onPause() {
+        //unregister dei receivers
+        unregisterReceiver(receiverLog);
+
+        super.onPause();
+    }
     @Override
     public void onBackPressed() {
 
@@ -132,11 +163,13 @@ public class LogcatViewerActivity extends ListActivity {
 
 			String data = objects.get(position);
 
-			if (null != data && data.length() > 31 && data.contains(LogcatViewerActivity.LOG_TAG)) {
+			if (null != data) {// && data.length() > 31 && data.contains(LogcatViewerActivity.LOG_TAG)) {
 
                 TextView textview = (TextView) view.findViewById(R.id.txtLogString);
-				String type = data.substring(31, 32);
-				String line = data.substring(32);
+				//String type = data.substring(31, 32);
+				//String line = data.substring(32);
+                String type = data.substring(0, 1);
+                String line = data.substring(1);
 
                 int start = line.indexOf(LogcatViewerActivity.LOG_TAG+":");
                 if(start > 0) {
@@ -154,7 +187,8 @@ public class LogcatViewerActivity extends ListActivity {
 
 	private class LogReaderTask extends AsyncTask<Void, String, Void> {
 		
-		private final String[] LOGCAT_CMD = new String[] { "logcat" };
+		//private final String[] LOGCAT_CMD = new String[] { "logcat", "--regex=TRANSLATE_LOG" };
+		private final String LOGCAT_CMD = "logcat";
 
 		private final int BUFFER_SIZE = 1024;
 
@@ -175,7 +209,7 @@ public class LogcatViewerActivity extends ListActivity {
 			}
 
 			try {
-				reader = new BufferedReader(new InputStreamReader(logprocess.getInputStream()), BUFFER_SIZE);
+				reader = new BufferedReader(new InputStreamReader(logprocess.getInputStream())); //, BUFFER_SIZE
 			} catch (IllegalArgumentException e) {
 				//e.printStackTrace();
 
@@ -188,8 +222,8 @@ public class LogcatViewerActivity extends ListActivity {
 				while (isRunning) {
 					line[0] = reader.readLine();
 
-                    if(!line[0].contains(LogcatViewerActivity.LOG_TAG)) continue;
-                    if(line[0].length() < 31) continue;
+                    //if(!line[0].contains(LogcatViewerActivity.LOG_TAG)) continue;
+                    //if(line[0].length() < 31) continue;
 
                     publishProgress(line);
 				}
