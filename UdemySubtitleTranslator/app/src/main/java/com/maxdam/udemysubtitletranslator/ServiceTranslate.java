@@ -156,9 +156,10 @@ public class ServiceTranslate extends IntentService {
                 //effettua la traduzione
                 String translatedText = subtitleCueInput.getText();
                 try {
-                    logInfo("input: " + subtitleCueInput.getText());
+                    //logInfo("input: " + subtitleCueInput.getText());
                     translatedText = translateFromGoogle(Constants.INPUT_LANGUAGE, Constants.OUTPUT_LANGUAGE, subtitleCueInput.getText());
-                    logInfo("output: " + translatedText);
+                    //logInfo("output: " + translatedText);
+                    logInfo("input: " + subtitleCueInput.getText()+"\n"+"output: " + translatedText);
                 }
                 catch (Exception e) {
                     //e.printStackTrace();
