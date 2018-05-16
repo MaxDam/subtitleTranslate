@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.fredy.jsrt.api.SRT;
@@ -23,6 +22,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,13 +36,6 @@ import fr.noop.subtitle.vtt.VttParser;
 import fr.noop.subtitle.vtt.VttWriter;
 
 public class ServiceTranslate extends IntentService {
-
-    private static final String SUBTITLE_PATH = "/storage/emulated/0/Android/data/com.udemy.android/files/udemy-subtitle-downloads";
-    private static final String FILE_SRT_ENGLISH_NAME = "en_US.srt";
-    private static final String FILE_SRT_ENGLISH_BACKUP_NAME = "en_US.srt.old";
-    private static final String FILE_SRT_ITALIAN_NAME = "it_IT.srt";
-    private static final String INPUT_LANGUAGE = "en";
-    private static final String OUTPUT_LANGUAGE = "it";
 
     private String TAG = ServiceTranslate.class.getName();
 
@@ -70,7 +63,7 @@ public class ServiceTranslate extends IntentService {
             //imposta ad on il semaforo
             inProgress.set(true);
 
-            File mainDir = new File(prefs.getString("subtitle_path", SUBTITLE_PATH));
+            File mainDir = new File(prefs.getString("subtitle_path", Constants.SUBTITLE_PATH));
             logInfo("main dir: " + mainDir.getPath() + "\n\n");
             exploreDirFiles(mainDir);
         }
@@ -133,11 +126,11 @@ public class ServiceTranslate extends IntentService {
                 if (file.isDirectory()) {
                     exploreDirFiles(file);
                 } else {
-                    if(file.getName().equals(FILE_SRT_ENGLISH_NAME)) {
+                    if(file.getName().equals(Constants.FILE_SRT_ENGLISH_NAME)) {
 
                         //ottiene il file di backup ed il file in italiano
-                        File fileEnglishBackup = new File(file.getPath().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ENGLISH_BACKUP_NAME));
-                        File fileItalian = new File(file.getPath().replace(FILE_SRT_ENGLISH_NAME, FILE_SRT_ITALIAN_NAME));
+                        File fileEnglishBackup = new File(file.getPath().replace(Constants.FILE_SRT_ENGLISH_NAME, Constants.FILE_SRT_ENGLISH_BACKUP_NAME));
+                        File fileItalian = new File(file.getPath().replace(Constants.FILE_SRT_ENGLISH_NAME, Constants.FILE_SRT_ITALIAN_NAME));
 
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
                         if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
@@ -164,7 +157,7 @@ public class ServiceTranslate extends IntentService {
                 String translatedText = subtitleCueInput.getText();
                 try {
                     logInfo("input: " + subtitleCueInput.getText());
-                    translatedText = translateFromGoogle(INPUT_LANGUAGE, OUTPUT_LANGUAGE, subtitleCueInput.getText());
+                    translatedText = translateFromGoogle(Constants.INPUT_LANGUAGE, Constants.OUTPUT_LANGUAGE, subtitleCueInput.getText());
                     logInfo("output: " + translatedText);
                 }
                 catch (Exception e) {
@@ -183,11 +176,11 @@ public class ServiceTranslate extends IntentService {
             }
 
             //effettua una copia di backup del file originale
-            File fileInputBackup = new File(fileInput.getParent(), FILE_SRT_ENGLISH_BACKUP_NAME);
+            File fileInputBackup = new File(fileInput.getParent(), Constants.FILE_SRT_ENGLISH_BACKUP_NAME);
             copyFile(fileInput, fileInputBackup);
 
             //crea i file di output
-            File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
+            File fileOutputItalian = new File(fileInput.getParent(), Constants.FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
             //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
             //fileOutputEnglish.deleteOnExit();
@@ -217,7 +210,7 @@ public class ServiceTranslate extends IntentService {
                 for (String lineInput : s.text) {
                     logInfo("input: " + lineInput);
                     try {
-                        String lineOutput = translateFromGoogle(INPUT_LANGUAGE, OUTPUT_LANGUAGE, lineInput);
+                        String lineOutput = translateFromGoogle(Constants.INPUT_LANGUAGE, Constants.OUTPUT_LANGUAGE, lineInput);
                         outputText.append(lineOutput);
                         logInfo("output: " + lineOutput);
                     }
@@ -229,11 +222,11 @@ public class ServiceTranslate extends IntentService {
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
             //effettua una copia di backup del file originale
-            File fileInputBackup = new File(fileInput.getParent(), FILE_SRT_ENGLISH_BACKUP_NAME);
+            File fileInputBackup = new File(fileInput.getParent(), Constants.FILE_SRT_ENGLISH_BACKUP_NAME);
             copyFile(fileInput, fileInputBackup);
 
             //crea i file di output
-            File fileOutputItalian = new File(fileInput.getParent(), FILE_SRT_ITALIAN_NAME);
+            File fileOutputItalian = new File(fileInput.getParent(), Constants.FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
             //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
             //fileOutputEnglish.deleteOnExit();
@@ -293,5 +286,6 @@ public class ServiceTranslate extends IntentService {
             in.close();
         }
     }
+
 
 }

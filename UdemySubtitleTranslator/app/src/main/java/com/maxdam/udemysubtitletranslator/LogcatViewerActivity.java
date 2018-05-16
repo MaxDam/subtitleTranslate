@@ -24,8 +24,6 @@ import android.widget.TextView;
 
 public class LogcatViewerActivity extends ListActivity {
 
-    public static String LOG_TAG = "TRANSLATE_LOG";
-
     private LogStringAdaptor adaptor = null;
 	private ArrayList<String> logarray = null;
 	private LogReaderTask logReaderTask = null;
@@ -118,10 +116,8 @@ public class LogcatViewerActivity extends ListActivity {
 			color = Color.rgb(128, 0, 0);
 		} else if (type.equals("E")) {
 			color = Color.rgb(255, 0, 0);
-			;
 		} else if (type.equals("I")) {
 			color = Color.rgb(0, 128, 0);
-			;
 		}
 
 		return color;
@@ -172,9 +168,9 @@ public class LogcatViewerActivity extends ListActivity {
                 String type = data.substring(0, 1);
                 String line = data.substring(1);
 
-                int start = line.indexOf(LogcatViewerActivity.LOG_TAG+":");
+                int start = line.indexOf(Constants.LOG_TAG+":");
                 if(start > 0) {
-                    start += LogcatViewerActivity.LOG_TAG.length() + 2;
+                    start += Constants.LOG_TAG.length() + 2;
                     line = line.substring(start);
                 }
 

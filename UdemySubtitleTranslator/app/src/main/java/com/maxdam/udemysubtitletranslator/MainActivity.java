@@ -1,55 +1,17 @@
 package com.maxdam.udemysubtitletranslator;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.Manifest;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import org.fredy.jsrt.api.SRT;
-import org.fredy.jsrt.api.SRTInfo;
-import org.fredy.jsrt.api.SRTReader;
-import org.fredy.jsrt.api.SRTTimeFormat;
-import org.fredy.jsrt.api.SRTWriter;
-import org.fredy.jsrt.editor.SRTEditor;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import fr.noop.subtitle.base.BaseSubtitleCue;
-import fr.noop.subtitle.model.SubtitleCue;
-import fr.noop.subtitle.model.SubtitleLine;
-import fr.noop.subtitle.model.SubtitleText;
-import fr.noop.subtitle.util.SubtitlePlainText;
-import fr.noop.subtitle.util.SubtitleTextLine;
-import fr.noop.subtitle.util.SubtitleTimeCode;
-import fr.noop.subtitle.vtt.VttCue;
-import fr.noop.subtitle.vtt.VttObject;
-import fr.noop.subtitle.vtt.VttParser;
-import fr.noop.subtitle.vtt.VttWriter;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     translateBtn.setEnabled(false);
 
+                    isReadStoragePermissionGranted();
+                    isWriteStoragePermissionGranted();
+
                     //chiama l'activity di log
                     Intent intent = new Intent(MainActivity.this, LogcatViewerActivity.class);
                     startActivity(intent);
@@ -95,5 +60,62 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    public  boolean isReadStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                Log.v(Constants.LOG_TAG,"Permission is granted read");
+                return true;
+            }
+            else {
+                Log.v(Constants.LOG_TAG,"Permission is revoked read");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(Constants.LOG_TAG,"Permission is granted read");
+            return true;
+        }
+    }
+
+    public  boolean isWriteStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                Log.v(Constants.LOG_TAG,"Permission is granted write");
+                return true;
+            }
+            else {
+                Log.v(Constants.LOG_TAG,"Permission is revoked write");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(Constants.LOG_TAG,"Permission is granted write");
+            return true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 2: {
+                Log.d(Constants.LOG_TAG, "Write external storage");
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.v(Constants.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
+                }
+                break;
+            }
+            case 3: {
+                Log.d(Constants.LOG_TAG, "Read external storage");
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.v(Constants.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
+                }
+                break;
+            }
+        }
     }
 }
