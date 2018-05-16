@@ -135,7 +135,8 @@ public class ServiceTranslate extends IntentService {
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
                         if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
                         //if(!fileEnglishBackup.exists()) {
-                            boolean result = translateWebvtt(file);
+                            boolean result = translateWebvtt(file, false);
+                            if(!result) translateWebvtt(file, true);
                             if(!result) translateSrt(file);
                         }
                     }
@@ -145,12 +146,12 @@ public class ServiceTranslate extends IntentService {
     }
 
     //translate webvtt file
-    private boolean translateWebvtt(File fileInput) {
+    private boolean translateWebvtt(File fileInput, boolean withHours) {
         try {
             logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
             VttObject vttObjOutput = new VttObject();
             VttParser parser = new VttParser("utf-8");
-            VttObject subtitleInput = parser.parse(new FileInputStream(fileInput), false, false);
+            VttObject subtitleInput = parser.parse(new FileInputStream(fileInput), false, withHours);
             for (SubtitleCue subtitleCueInput : subtitleInput.getCues()) {
 
                 //effettua la traduzione
