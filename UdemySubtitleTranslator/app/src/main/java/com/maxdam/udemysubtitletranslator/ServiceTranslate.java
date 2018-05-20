@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.fredy.jsrt.api.SRT;
@@ -80,7 +81,7 @@ public class ServiceTranslate extends IntentService {
         broadcastIntent.putExtra("message", logType + message);
         this.sendBroadcast(broadcastIntent);
 
-        //Log.i(LogcatViewerActivity.LOG_TAG, message);
+        Log.i(CommonStuff.LOG_TAG, message);
     }
 
     private void logDebug(String message) {
@@ -91,7 +92,7 @@ public class ServiceTranslate extends IntentService {
         broadcastIntent.putExtra("message", logType + message);
         this.sendBroadcast(broadcastIntent);
 
-        //Log.d(LogcatViewerActivity.LOG_TAG, message);
+        //Log.d(CommonStuff.LOG_TAG, message);
     }
 
     private void logWarning(String message) {
@@ -102,7 +103,7 @@ public class ServiceTranslate extends IntentService {
         broadcastIntent.putExtra("message", logType + message);
         this.sendBroadcast(broadcastIntent);
 
-        //Log.w(LogcatViewerActivity.LOG_TAG, message);
+        //Log.w(CommonStuff.LOG_TAG, message);
     }
 
     private void logError(String message) {
@@ -113,7 +114,7 @@ public class ServiceTranslate extends IntentService {
         broadcastIntent.putExtra("message", logType + message);
         this.sendBroadcast(broadcastIntent);
 
-        //Log.e(LogcatViewerActivity.LOG_TAG, message);
+        //Log.e(CommonStuff.LOG_TAG, message);
     }
 
     //scansiona la directory dei sottotitoli
