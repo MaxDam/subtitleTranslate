@@ -22,7 +22,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,7 +62,7 @@ public class ServiceTranslate extends IntentService {
             //imposta ad on il semaforo
             inProgress.set(true);
 
-            File mainDir = new File(prefs.getString("subtitle_path", Constants.SUBTITLE_PATH));
+            File mainDir = new File(prefs.getString("subtitle_path", CommonStuff.SUBTITLE_PATH));
             logInfo("main dir: " + mainDir.getPath() + "\n\n");
             exploreDirFiles(mainDir);
         }
@@ -126,15 +125,14 @@ public class ServiceTranslate extends IntentService {
                 if (file.isDirectory()) {
                     exploreDirFiles(file);
                 } else {
-                    if(file.getName().equals(Constants.FILE_SRT_ENGLISH_NAME)) {
+                    if(file.getName().equals(CommonStuff.FILE_SRT_ENGLISH_NAME)) {
 
                         //ottiene il file di backup ed il file in italiano
-                        File fileEnglishBackup = new File(file.getPath().replace(Constants.FILE_SRT_ENGLISH_NAME, Constants.FILE_SRT_ENGLISH_BACKUP_NAME));
-                        File fileItalian = new File(file.getPath().replace(Constants.FILE_SRT_ENGLISH_NAME, Constants.FILE_SRT_ITALIAN_NAME));
+                        File fileEnglishBackup = new File(file.getPath().replace(CommonStuff.FILE_SRT_ENGLISH_NAME, CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME));
+                        File fileItalian = new File(file.getPath().replace(CommonStuff.FILE_SRT_ENGLISH_NAME, CommonStuff.FILE_SRT_ITALIAN_NAME));
 
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
                         if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
-                        //if(!fileEnglishBackup.exists()) {
                             boolean result = translateWebvtt(file, false);
                             if(!result) translateWebvtt(file, true);
                             if(!result) translateSrt(file);
@@ -157,13 +155,10 @@ public class ServiceTranslate extends IntentService {
                 //effettua la traduzione
                 String translatedText = subtitleCueInput.getText();
                 try {
-                    //logInfo("input: " + subtitleCueInput.getText());
-                    translatedText = translateFromGoogle(Constants.INPUT_LANGUAGE, Constants.OUTPUT_LANGUAGE, subtitleCueInput.getText());
-                    //logInfo("output: " + translatedText);
+                    translatedText = translateFromGoogle(CommonStuff.INPUT_LANGUAGE, CommonStuff.OUTPUT_LANGUAGE, subtitleCueInput.getText());
                     logInfo("input: " + subtitleCueInput.getText()+"\n"+"output: " + translatedText);
                 }
                 catch (Exception e) {
-                    //e.printStackTrace();
                     logError("error translate: " + e.getMessage());
                 }
 
@@ -178,14 +173,12 @@ public class ServiceTranslate extends IntentService {
             }
 
             //effettua una copia di backup del file originale
-            File fileInputBackup = new File(fileInput.getParent(), Constants.FILE_SRT_ENGLISH_BACKUP_NAME);
+            File fileInputBackup = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME);
             copyFile(fileInput, fileInputBackup);
 
             //crea i file di output
-            File fileOutputItalian = new File(fileInput.getParent(), Constants.FILE_SRT_ITALIAN_NAME);
+            File fileOutputItalian = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
-            //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
-            //fileOutputEnglish.deleteOnExit();
 
             //scrive i file in uscita
             VttWriter writer = new VttWriter("utf-8");
@@ -195,7 +188,6 @@ public class ServiceTranslate extends IntentService {
             return true;
         }
         catch(Exception e) {
-            //e.printStackTrace();
             logError("error: " + e.getMessage() + "\n\n");
             return false;
         }
@@ -212,26 +204,23 @@ public class ServiceTranslate extends IntentService {
                 for (String lineInput : s.text) {
                     logInfo("input: " + lineInput);
                     try {
-                        String lineOutput = translateFromGoogle(Constants.INPUT_LANGUAGE, Constants.OUTPUT_LANGUAGE, lineInput);
+                        String lineOutput = translateFromGoogle(CommonStuff.INPUT_LANGUAGE, CommonStuff.OUTPUT_LANGUAGE, lineInput);
                         outputText.append(lineOutput);
                         logInfo("output: " + lineOutput);
                     }
                     catch (Exception e) {
-                        //e.printStackTrace();
                         logError("error translate: " + e.getMessage());
                     }
                 }
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
             //effettua una copia di backup del file originale
-            File fileInputBackup = new File(fileInput.getParent(), Constants.FILE_SRT_ENGLISH_BACKUP_NAME);
+            File fileInputBackup = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME);
             copyFile(fileInput, fileInputBackup);
 
             //crea i file di output
-            File fileOutputItalian = new File(fileInput.getParent(), Constants.FILE_SRT_ITALIAN_NAME);
+            File fileOutputItalian = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ITALIAN_NAME);
             File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
-            //File fileOutputEnglish = new File(fileInput.getParent(), "test.srt");
-            //fileOutputEnglish.deleteOnExit();
 
             //scrive i file in uscita
             SRTWriter.write(fileOutputItalian, infoOutput);
@@ -240,7 +229,6 @@ public class ServiceTranslate extends IntentService {
             return true;
         }
         catch(Exception e) {
-            //e.printStackTrace();
             logError("error: " + e.getMessage() + "\n\n");
             return false;
         }

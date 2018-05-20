@@ -39,8 +39,13 @@ public class LogcatViewerActivity extends ListActivity {
 		setListAdapter(adaptor);
 
 		//task lettore logcat
-		//logReaderTask = new LogReaderTask();
-		//logReaderTask.execute();
+		/*logReaderTask = new LogReaderTask();
+		logReaderTask.execute();*/
+
+		//start del timer per moditorare la cartella dei sottotitoli
+		/*FolderMonitoringReceiver folderMonitoringReceiver = new FolderMonitoringReceiver();
+		folderMonitoringReceiver.cancelTimerAlarm(this);
+		folderMonitoringReceiver.setTimerAlarm(this);*/
 
         //receiver di messaggi log
         IntentFilter filterPredict = new IntentFilter();
@@ -168,9 +173,9 @@ public class LogcatViewerActivity extends ListActivity {
                 String type = data.substring(0, 1);
                 String line = data.substring(1);
 
-                int start = line.indexOf(Constants.LOG_TAG+":");
+                int start = line.indexOf(CommonStuff.LOG_TAG+":");
                 if(start > 0) {
-                    start += Constants.LOG_TAG.length() + 2;
+                    start += CommonStuff.LOG_TAG.length() + 2;
                     line = line.substring(start);
                 }
 

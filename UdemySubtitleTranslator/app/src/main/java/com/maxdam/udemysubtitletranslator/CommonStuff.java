@@ -1,7 +1,7 @@
 package com.maxdam.udemysubtitletranslator;
 
 
-public class Constants {
+public class CommonStuff {
 
     public static String LOG_TAG = "TRANSLATE_LOG";
     public static final String SUBTITLE_PATH = "/storage/emulated/0/Android/data/com.udemy.android/files/udemy-subtitle-downloads";
@@ -11,5 +11,6 @@ public class Constants {
     public static final String INPUT_LANGUAGE = "en";
     public static final String OUTPUT_LANGUAGE = "it";
 
+    public static final int FOLDER_MONITORING_INTERVAL = 1000 * 60 * 2; //ogni 2 minuti
 
 }

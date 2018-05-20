@@ -65,17 +65,17 @@ public class MainActivity extends AppCompatActivity {
     public  boolean isReadStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.v(Constants.LOG_TAG,"Permission is granted read");
+                Log.v(CommonStuff.LOG_TAG,"Permission is granted read");
                 return true;
             }
             else {
-                Log.v(Constants.LOG_TAG,"Permission is revoked read");
+                Log.v(CommonStuff.LOG_TAG,"Permission is revoked read");
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
                 return false;
             }
         }
         else { //permission is automatically granted on sdk<23 upon installation
-            Log.v(Constants.LOG_TAG,"Permission is granted read");
+            Log.v(CommonStuff.LOG_TAG,"Permission is granted read");
             return true;
         }
     }
@@ -83,17 +83,17 @@ public class MainActivity extends AppCompatActivity {
     public  boolean isWriteStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.v(Constants.LOG_TAG,"Permission is granted write");
+                Log.v(CommonStuff.LOG_TAG,"Permission is granted write");
                 return true;
             }
             else {
-                Log.v(Constants.LOG_TAG,"Permission is revoked write");
+                Log.v(CommonStuff.LOG_TAG,"Permission is revoked write");
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
                 return false;
             }
         }
         else { //permission is automatically granted on sdk<23 upon installation
-            Log.v(Constants.LOG_TAG,"Permission is granted write");
+            Log.v(CommonStuff.LOG_TAG,"Permission is granted write");
             return true;
         }
     }
@@ -103,16 +103,16 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 2: {
-                Log.d(Constants.LOG_TAG, "Write external storage");
+                Log.d(CommonStuff.LOG_TAG, "Write external storage");
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.v(Constants.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
+                    Log.v(CommonStuff.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
                 }
                 break;
             }
             case 3: {
-                Log.d(Constants.LOG_TAG, "Read external storage");
+                Log.d(CommonStuff.LOG_TAG, "Read external storage");
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.v(Constants.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
+                    Log.v(CommonStuff.LOG_TAG, "Permission: " + permissions[0] + "was " + grantResults[0]);
                 }
                 break;
             }
