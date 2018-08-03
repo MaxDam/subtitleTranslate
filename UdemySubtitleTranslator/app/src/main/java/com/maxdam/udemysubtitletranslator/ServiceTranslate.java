@@ -151,6 +151,7 @@ public class ServiceTranslate extends IntentService {
             VttObject vttObjOutput = new VttObject();
             VttParser parser = new VttParser("utf-8");
             VttObject subtitleInput = parser.parse(new FileInputStream(fileInput), false, withHours);
+            int errorCount = 0;
             for (SubtitleCue subtitleCueInput : subtitleInput.getCues()) {
 
                 //effettua la traduzione
@@ -161,6 +162,7 @@ public class ServiceTranslate extends IntentService {
                 }
                 catch (Exception e) {
                     logError("error translate: " + e.getMessage());
+                    errorCount++;
                 }
 
                 //scrive il Cue di output e lo accoda all'oggetto di output
@@ -171,6 +173,12 @@ public class ServiceTranslate extends IntentService {
                 subtitleTextLineOutput.addText(new SubtitlePlainText(translatedText));
                 subtitleCueOutput.addLine(subtitleTextLineOutput);
                 vttObjOutput.addCue(subtitleCueOutput);
+            }
+
+            //se si e' raggiunto il massimo degli errori ammessi non scrive il file
+            if(errorCount > CommonStuff.MAX_ERROR_COUNT) {
+                logError("error: raggiunto il numero massimo di errori ammessi" + "\n\n");
+                return false;
             }
 
             //effettua una copia di backup del file originale
@@ -200,6 +208,7 @@ public class ServiceTranslate extends IntentService {
             logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
             SRTInfo infoOutput = new SRTInfo();
             SRTInfo infoInput = SRTReader.read(fileInput);
+            int errorCount = 0;
             for (SRT s : infoInput) {
                 StringBuffer outputText = new StringBuffer();
                 for (String lineInput : s.text) {
@@ -211,10 +220,18 @@ public class ServiceTranslate extends IntentService {
                     }
                     catch (Exception e) {
                         logError("error translate: " + e.getMessage());
+                        errorCount++;
                     }
                 }
                 infoOutput.add(new SRT(s.number, s.startTime, s.endTime, outputText.toString()));
             }
+
+            //se si e' raggiunto il massimo degli errori ammessi non scrive il file
+            if(errorCount > CommonStuff.MAX_ERROR_COUNT) {
+                logError("error: raggiunto il numero massimo di errori ammessi" + "\n\n");
+                return false;
+            }
+
             //effettua una copia di backup del file originale
             File fileInputBackup = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME);
             copyFile(fileInput, fileInputBackup);

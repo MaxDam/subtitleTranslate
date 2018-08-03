@@ -13,4 +13,5 @@ public class CommonStuff {
 
     public static final int FOLDER_MONITORING_INTERVAL = 1000 * 60 * 2; //ogni 2 minuti
 
+    public static final int MAX_ERROR_COUNT = 5;
 }
