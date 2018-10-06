@@ -69,17 +69,22 @@ public class VttParser implements SubtitleParser {
         VttCue cue = null;
         String cueText = ""; // Text of the cue
 
+        int sentenceCount = 0; //bymax
         while ((textLine = br.readLine()) != null) {
             textLine = textLine.trim();
 
             // All Vtt files start with WEBVTT
-            if (cursorStatus == CursorStatus.NONE && textLine.equals("WEBVTT")) {
+            /*if (cursorStatus == CursorStatus.NONE && textLine.equals("WEBVTT")) {
+                cursorStatus = CursorStatus.SIGNATURE;
+                continue;
+            }*/
+            //bymax
+            if (cursorStatus == CursorStatus.NONE && textLine.contains("WEBVTT")) {
                 cursorStatus = CursorStatus.SIGNATURE;
                 continue;
             }
 
-            if (cursorStatus == CursorStatus.SIGNATURE ||
-                    cursorStatus == CursorStatus.EMPTY_LINE) {
+            if (cursorStatus == CursorStatus.SIGNATURE || cursorStatus == CursorStatus.EMPTY_LINE) {
                 if (textLine.isEmpty()) {
                     continue;
                 }
@@ -88,63 +93,87 @@ public class VttParser implements SubtitleParser {
                 cue = new VttCue();
                 cursorStatus = CursorStatus.CUE_ID;
 
-                if(withHours) {
-					//original
-					if (!textLine.substring(13, 16).equals("-->")) {
-						// First textLine is the cue number
-						cue.setId(textLine);
-						continue;
-					}
-				} 
-				else {
-					//bymax
-					if (!textLine.substring(10, 13).equals("-->")) {
-						// First textLine is the cue number
-						cue.setId(textLine);
-						continue;
-					}
-				}
+                try {
+                    if (withHours) {
+                        //original
+                        if (!textLine.substring(13, 16).equals("-->")) {
+                            // First textLine is the cue number
+                            cue.setId(textLine);
+                            continue;
+                        }
+                    } else {
+                        //bymax
+                        if (!textLine.substring(10, 13).equals("-->")) {
+                            // First textLine is the cue number
+                            cue.setId(textLine);
+                            continue;
+                        }
+                    }
+                }
+                catch(Exception e) {
+                    //bymax
+                    //si tratta di un CUE_ID, quindi lo salta
+                    cursorStatus = CursorStatus.EMPTY_LINE;
+                    continue;
+                }
                 
 
                 // There is no cue number
             }
 
-			if(withHours) {
-				//original
-				// Second textLine defines the start and end time codes
-				// 00:01:21.456 --> 00:01:23.417
-				if (cursorStatus == CursorStatus.CUE_ID) {
-					if (!textLine.substring(13, 16).equals("-->")) {
-						throw new SubtitleParsingException(String.format(
-								"Timecode textLine is badly formated: %s", textLine));
-					}
 
-					cue.setStartTime(this.parseTimeCode(textLine.substring(0, 12), withHours));
-					cue.setEndTime(this.parseTimeCode(textLine.substring(17), withHours));
-					cursorStatus = CursorStatus.CUE_TIMECODE;
-					continue;
-				}
-			} 
-			else {
-				//bymax
-				// Second textLine defines the start and end time codes
-				// 01:21.456 --> 01:23.417
-				if (cursorStatus == CursorStatus.CUE_ID) {
-					if (!textLine.substring(10, 13).equals("-->")) {
-						throw new SubtitleParsingException(String.format(
-								"Timecode textLine is badly formated max: %s", textLine));
-					}
+            if(withHours) {
+                //original
+                // Second textLine defines the start and end time codes
+                // 00:01:21.456 --> 00:01:23.417
+                if (cursorStatus == CursorStatus.CUE_ID) {
+                    try {
+                        if (!textLine.substring(13, 16).equals("-->")) {
+                            throw new SubtitleParsingException(String.format(
+                                    "Timecode textLine is badly formated: %s", textLine));
+                        }
 
-					cue.setStartTime(this.parseTimeCode(textLine.substring(0, 9), withHours));
-					cue.setEndTime(this.parseTimeCode(textLine.substring(14), withHours));
-					cursorStatus = CursorStatus.CUE_TIMECODE;
-					continue;
-				}
-			}
+                        cue.setStartTime(this.parseTimeCode(textLine.substring(0, 12), withHours));
+                        cue.setEndTime(this.parseTimeCode(textLine.substring(17), withHours));
+                        cursorStatus = CursorStatus.CUE_TIMECODE;
+                        continue;
+                    }
+                    catch(Exception e) {
+                        //bymax
+                        //si tratta di un CUE_ID, quindi lo salta
+                        cursorStatus = CursorStatus.EMPTY_LINE;
+                        continue;
+                    }
+                }
+            }
+            else {
+                //bymax
+                // Second textLine defines the start and end time codes
+                // 01:21.456 --> 01:23.417
+                if (cursorStatus == CursorStatus.CUE_ID) {
+
+                    try {
+                        if (!textLine.substring(10, 13).equals("-->")) {
+                            throw new SubtitleParsingException(String.format(
+                                    "Timecode textLine is badly formated max: %s", textLine));
+                        }
+
+                        cue.setStartTime(this.parseTimeCode(textLine.substring(0, 9), withHours));
+                        cue.setEndTime(this.parseTimeCode(textLine.substring(14), withHours));
+                        cursorStatus = CursorStatus.CUE_TIMECODE;
+                        continue;
+                    }
+                    catch(Exception e) {
+                        //bymax
+                        //si tratta di un CUE_ID, quindi lo salta
+                        cursorStatus = CursorStatus.EMPTY_LINE;
+                        continue;
+                    }
+                }
+            }
             
 			// Following lines are the cue lines
-            if (cursorStatus == CursorStatus.CUE_TIMECODE ||
-                            cursorStatus ==  CursorStatus.CUE_TEXT) {
+            if (cursorStatus == CursorStatus.CUE_TIMECODE || cursorStatus ==  CursorStatus.CUE_TEXT) {
                 if (!cueText.isEmpty()) {
                     // New line
                     cueText += "\n";
@@ -156,11 +185,28 @@ public class VttParser implements SubtitleParser {
                 // If not strict, accept empty subtitle
                 if (textLine.isEmpty()) {
 					if (!strict) {
-						cue.setLines(parseCueText(cueText));
-						vttObject.addCue(cue);
-						cue = null;
-						cueText = "";
-						cursorStatus = CursorStatus.EMPTY_LINE;
+                        try {
+                            List<SubtitleLine> listSubtitleLines = parseCueText(cueText);
+                            cue.setLines(listSubtitleLines);
+                            vttObject.addCue(cue);
+                            cue = null;
+                            cueText = "";
+                            cursorStatus = CursorStatus.EMPTY_LINE;
+                            sentenceCount++;
+                        }
+                        catch(Exception e) {
+                            //bymax
+                            //throw new SubtitleParsingException(String.format("parse exception, text: %s, error: %s", cueText, e.getMessage()));
+                            List<SubtitleLine> listSubtitleLines = new ArrayList<>();
+                            VttLine cueLine = new VttLine();
+                            cueLine.addText(new SubtitlePlainText(cueText.replaceAll("\\<.*?\\>", "")));
+                            listSubtitleLines.add(cueLine);
+                            cue.setLines(listSubtitleLines);
+                            vttObject.addCue(cue);
+                            cue = null;
+                            cueText = "";
+                            cursorStatus = CursorStatus.EMPTY_LINE;
+                        }
 					} else {
 			        	throw new SubtitleParsingException(String.format(
 			        			"Empty subtitle is not allowed in WebVTT for cue at timecode: %s", cue.getStartTime()));
@@ -173,16 +219,37 @@ public class VttParser implements SubtitleParser {
                 // End of cue
                 // Process multilines text in one time
                 // A class or a style can be applied for more than one line
-                cue.setLines(parseCueText(cueText));
-                vttObject.addCue(cue);
-                cue = null;
-                cueText = "";
-                cursorStatus = CursorStatus.EMPTY_LINE;
-                continue;
+                try {
+                    List<SubtitleLine> listSubtitleLines = parseCueText(cueText);
+                    cue.setLines(listSubtitleLines);
+                    vttObject.addCue(cue);
+                    cue = null;
+                    cueText = "";
+                    cursorStatus = CursorStatus.EMPTY_LINE;
+                    continue;
+                }
+                catch(Exception e) {
+                    //bymax
+                    //throw new SubtitleParsingException(String.format("parse exception, text: %s, error: %s", cueText, e.getMessage()));
+                    List<SubtitleLine> listSubtitleLines = new ArrayList<>();
+                    VttLine cueLine = new VttLine();
+                    cueLine.addText(new SubtitlePlainText(cueText.replaceAll("\\<.*?\\>", "")));
+                    listSubtitleLines.add(cueLine);
+                    cue.setLines(listSubtitleLines);
+                    vttObject.addCue(cue);
+                    cue = null;
+                    cueText = "";
+                    cursorStatus = CursorStatus.EMPTY_LINE;
+                }
             }
 
-        	throw new SubtitleParsingException(String.format(
+            throw new SubtitleParsingException(String.format(
         			"Unexpected line: %s", textLine));
+
+        }
+
+        if(sentenceCount == 0) {
+            throw new SubtitleParsingException("no sentences found");
         }
 
         return vttObject;
