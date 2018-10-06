@@ -197,6 +197,7 @@ public class VttParser implements SubtitleParser {
                         catch(Exception e) {
                             //bymax
                             //throw new SubtitleParsingException(String.format("parse exception, text: %s, error: %s", cueText, e.getMessage()));
+                            //bypass text parser
                             List<SubtitleLine> listSubtitleLines = new ArrayList<>();
                             VttLine cueLine = new VttLine();
                             cueLine.addText(new SubtitlePlainText(cueText.replaceAll("\\<.*?\\>", "")));
@@ -231,6 +232,7 @@ public class VttParser implements SubtitleParser {
                 catch(Exception e) {
                     //bymax
                     //throw new SubtitleParsingException(String.format("parse exception, text: %s, error: %s", cueText, e.getMessage()));
+                    //bypass text parser
                     List<SubtitleLine> listSubtitleLines = new ArrayList<>();
                     VttLine cueLine = new VttLine();
                     cueLine.addText(new SubtitlePlainText(cueText.replaceAll("\\<.*?\\>", "")));

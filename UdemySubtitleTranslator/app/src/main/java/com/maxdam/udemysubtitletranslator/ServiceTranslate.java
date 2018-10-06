@@ -134,9 +134,9 @@ public class ServiceTranslate extends IntentService {
 
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
                         if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
-                            boolean result = translateWebvtt(file, false);
-                            if(!result) translateWebvtt(file, true);
-                            if(!result) translateSrt(file);
+                            boolean     result = translateWebvtt(file, false);
+                            if(!result) result = translateWebvtt(file, true);
+                            if(!result) result = translateSrt(file);
                         }
                     }
                 }
