@@ -133,7 +133,8 @@ public class ServiceTranslate extends IntentService {
                         File fileItalian = new File(file.getPath().replace(CommonStuff.FILE_SRT_ENGLISH_NAME, CommonStuff.FILE_SRT_ITALIAN_NAME));
 
                         //per elaborare il file non devono esistere sia il file di backup che il file in italiano
-                        if(!fileEnglishBackup.exists() && !fileItalian.exists()) {
+                        if( (!fileEnglishBackup.exists() && !fileItalian.exists())
+                        ||  (fileEnglishBackup.exists() && Math.abs(file.lastModified() - fileEnglishBackup.lastModified()) > 300) ) {
                             boolean     result = translateWebvtt(file, false);
                             if(!result) result = translateWebvtt(file, true);
                             if(!result) result = translateSrt(file);
