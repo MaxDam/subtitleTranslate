@@ -136,7 +136,7 @@ public class ServiceTranslate extends IntentService {
                         //oppure il file backup ed il file esaminato devono avere almeno un minuto di differenza nell'ultima modifica
                         if( (!fileEnglishBackup.exists() && !fileItalian.exists())
                         ||  (fileEnglishBackup.exists() && Math.abs(file.lastModified() - fileEnglishBackup.lastModified()) > (1*60*1000)) ) {
-                            logInfo("file: " + file.lastModified()+"\n"+"file bak: " + fileEnglishBackup.lastModified()+"\n"+"diff: " + Math.abs(file.lastModified() - fileEnglishBackup.lastModified()));
+                            //logInfo("file: " + file.lastModified()+"\n"+"file bak: " + fileEnglishBackup.lastModified()+"\n"+"diff: " + Math.abs(file.lastModified() - fileEnglishBackup.lastModified()));
 
                             boolean     result = translateWebvtt(file, false);
                             if(!result) result = translateWebvtt(file, true);
