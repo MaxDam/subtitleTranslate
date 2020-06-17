@@ -206,6 +206,108 @@ public class ServiceTranslate extends IntentService {
         }
     }
 
+    //translate webvtt file v2 //TODO da rivedere completamente
+    private boolean translateWebvtt_v2(File fileInput, boolean withHours) {
+
+        int MAX_WORD_COUNT = 5000;
+        String TEXT_SEPARATOR = "...";
+
+        String textToTranslate = "";
+        List<String> txtList = new ArrayList<String>();
+        List<VttCue> objList = new ArrayList<VttCue>();
+
+        try {
+            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
+            VttObject vttObjOutput = new VttObject();
+            VttParser parser = new VttParser("utf-8");
+            VttObject subtitleInput = parser.parse(new FileInputStream(fileInput), false, withHours);
+
+            //scorre tutti i sottotitoli
+            for (SubtitleCue subtitleCueInput : subtitleInput.getCues()) {
+
+                //aggiunge il testo alla lista
+                txtList.add(subtitleCueInput.getText());
+
+                //crea l'oggetto VttCue e lo aggiunge alla lista
+                VttCue subtitleCueOutput = new VttCue();
+                subtitleCueOutput.setStartTime(subtitleCueInput.getStartTime());
+                subtitleCueOutput.setEndTime(subtitleCueInput.getEndTime());
+                SubtitleTextLine subtitleTextLineOutput = new SubtitleTextLine();
+                objList.add(subtitleCueOutput);
+
+                //aggiunge l'oggetto all'output
+                vttObjOutput.addCue(subtitleCueOutput);
+            }
+
+            //scorre la lista di testi da tradurre
+            int lastTranslatedIndex = 0;
+            for(int i = 0; i < txtList.size(); i++) {
+                String newTextToTranslate = textToTranslate + (i > 0 ? TEXT_SEPARATOR : "") + txtList.get(i);
+
+                //se supera il numero massimo di parole ..effettua la traduzione
+                if(newInputText.length() > MAX_WORD_COUNT) {
+                    lastTranslatedIndex = i;
+                    boolean esito = translate(textToTranslate);
+                    if(!esito) break;
+                }
+
+                textToTranslate = newTextToTranslate;
+            }
+            //effetua la traduzione dell'inputText rimanente
+            boolean esito = translate(textToTranslate);
+
+            //effettua una copia di backup del file originale
+            File fileInputBackup = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME);
+            copyFile(fileInput, fileInputBackup);
+
+            //crea i file di output
+            File fileOutputItalian = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ITALIAN_NAME);
+            File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
+
+            //scrive i file in uscita
+            VttWriter writer = new VttWriter("utf-8");
+            writer.write(vttObjOutput, new FileOutputStream(fileOutputItalian));
+            writer.write(vttObjOutput, new FileOutputStream(fileOutputEnglish));
+            logWarning("write file: " + fileOutputEnglish.getCanonicalPath() + "\n\n");
+            return true;
+        }
+        catch(Exception e) {
+            logError("error: " + e.getMessage() + "\n\n");
+            return false;
+        }
+
+        //metodo translate
+        boolean translate(String textToTranslate) {
+            //se invece il nuovo testo supera la lunghezza totale traduce quello accumulato fino ad ora
+            try {
+                translatedText = translateFromGoogle(CommonStuff.INPUT_LANGUAGE, CommonStuff.OUTPUT_LANGUAGE, textToTranslate);
+                logInfo("input: " + subtitleCueInput.getText()+"\n"+"output: " + translatedText);
+            }
+            catch (Exception e) {
+                logError("error translate: " + e.getMessage());
+                return false;
+            }
+
+            //splitta il testo traslato per il separatore
+            String[] translatedTextTokens = translatedText.split(TEXT_SEPARATOR);
+
+            //se la lunghezza delle linee è diversa dal buffer, c'è un errore
+            if(buffer.size() != translatedTextTokens.lenght()) {
+                logError("error translate: size discrepance");
+                return false;
+            }
+
+            //scorre i token del testo traslato e li aggiunge al buffer dell'srt
+            for(int i = 0; i < translatedTextTokens.lenght(); i++) {
+                VttCue subtitleCueOutput = objList.get(i + lastTranslatedIndex);
+                subtitleTextLineOutput.addText(new SubtitlePlainText(translatedTextTokens[i]));
+                subtitleCueOutput.addLine(subtitleTextLineOutput);
+            }
+
+            return true;
+        }
+    }
+
     //translate srt file
     private boolean translateSrt(File fileInput) {
         try {
@@ -253,6 +355,108 @@ public class ServiceTranslate extends IntentService {
         catch(Exception e) {
             logError("error: " + e.getMessage() + "\n\n");
             return false;
+        }
+    }
+
+    //translate srt file v2 //TODO modiicato ma da rivedere
+    private boolean translateSrt_v2(File fileInput) {
+
+        int MAX_WORD_COUNT = 5000;
+        String TEXT_SEPARATOR = "...";
+
+        String textToTranslate = "";
+        List<String> txtList = new ArrayList<String>();
+        List<SRT> objList = new ArrayList<SRT>();
+
+        try {
+            logWarning("read file: " + fileInput.getParentFile().getName() + "/" + fileInput.getName());
+            SRTInfo infoOutput = new SRTInfo();
+            SRTInfo infoInput = SRTReader.read(fileInput);
+            int errorCount = 0;
+
+            //scorre tutte le linee del SRT
+            for (SRT s : infoInput) {
+
+                //accumula il testo per le varie linee
+                String txt = "";
+                for (String lineInput : s.text)
+                    txt += " " + lineInput;
+
+                //aggiunge il testo alla lista
+                txtList.add(txt);
+
+                //crea l'oggetto STR e lo aggiunge alla lista
+                SRT srt = new SRT(s.number, s.startTime, s.endTime, txt);
+                objList.add(srt);
+
+                //aggiunge l'oggetto all'output
+                infoOutput.add(srt);
+            }
+
+            //scorre la lista di testi da tradurre
+            int lastTranslatedIndex = 0;
+            for(int i = 0; i < txtList.size(); i++) {
+                String newTextToTranslate = textToTranslate + (i > 0 ? TEXT_SEPARATOR : "") + txtList.get(i);
+
+                //se supera il numero massimo di parole ..effettua la traduzione
+                if(newInputText.length() > MAX_WORD_COUNT) {
+                    lastTranslatedIndex = i;
+                    boolean esito = translate(textToTranslate);
+                    if(!esito) break;
+                }
+
+                textToTranslate = newTextToTranslate;
+            }
+            //effetua la traduzione dell'inputText rimanente
+            boolean esito = translate(textToTranslate);
+
+            //effettua una copia di backup del file originale
+            File fileInputBackup = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ENGLISH_BACKUP_NAME);
+            copyFile(fileInput, fileInputBackup);
+
+            //crea i file di output
+            File fileOutputItalian = new File(fileInput.getParent(), CommonStuff.FILE_SRT_ITALIAN_NAME);
+            File fileOutputEnglish = new File(fileInput.getParent(), fileInput.getName());
+
+            //scrive i file in uscita
+            SRTWriter.write(fileOutputItalian, infoOutput);
+            SRTWriter.write(fileOutputEnglish, infoOutput);
+            logWarning("write file: " + fileOutputEnglish.getCanonicalPath() + "\n\n");
+            return true;
+        }
+        catch(Exception e) {
+            logError("error: " + e.getMessage() + "\n\n");
+            return false;
+        }
+
+        //metodo translate
+        boolean translate(String textToTranslate) {
+            //se invece il nuovo testo supera la lunghezza totale traduce quello accumulato fino ad ora
+            try {
+                translatedText = translateFromGoogle(CommonStuff.INPUT_LANGUAGE, CommonStuff.OUTPUT_LANGUAGE, textToTranslate);
+                logInfo("input: " + subtitleCueInput.getText()+"\n"+"output: " + translatedText);
+            }
+            catch (Exception e) {
+                logError("error translate: " + e.getMessage());
+                return false;
+            }
+
+            //splitta il testo traslato per il separatore
+            String[] translatedTextTokens = translatedText.split(TEXT_SEPARATOR);
+
+            //se la lunghezza delle linee è diversa dal buffer, c'è un errore
+            if(buffer.size() != translatedTextTokens.lenght()) {
+                logError("error translate: size discrepance");
+                return false;
+            }
+
+            //scorre i token del testo traslato e li aggiunge al buffer dell'srt
+            for(int i = 0; i < translatedTextTokens.lenght(); i++) {
+                STR str = objList.get(i + lastTranslatedIndex);
+                str.setText(translatedTextTokens[i]);
+            }
+
+            return true;
         }
     }
 
